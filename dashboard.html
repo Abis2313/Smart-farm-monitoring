@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Farm Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h2 {
+      margin-top: 30px;
+      color: #00796b;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+      background-color: #ffffff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 15px;
+      margin-top: 40px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    button {
+      background-color: #00796b;
+      color: white;
+      padding: 12px 20px;
+      margin: 20px 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #004d40;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🌾 Live Sensor Data - Smart Farm Monitoring</h2>
+    <img src="{{ url_for('static', filename='images/tractor.png') }}" alt="Logo" style="height: 60px; position: absolute; top: 10px; left: 10px;">
+    <canvas id="lineChart"></canvas>
+
+    <br>
+    <a href="/export" download><button>📥 Download Sensor Data (CSV)</button></a>
+    <a href="/logout"><button>🚪 Logout</button></a>
+  </div>
+ <script> 
+  async function fetchData() 
+  {
+    const res = await fetch('/api/data');
+    const result = await res.json();
+  
+    const data = result.data;
+    const alertMessage = result.alert;
+  
+    const labels = data.map(row => row[1]);
+    const temperature = data.map(row => row[2]);
+    const humidity = data.map(row => row[3]);
+    const soil = data.map(row => row[3]);
+  
+    const ctx = document.getElementById('lineChart').getContext('2d');
+
+    const alerts = {{ alerts|tojson }};
+    if (alerts.length === 0) {
+        alert("🌱 All sensor levels are OK. Temperature, Humidity, and Soil Moisture are normal.");
+    } else {
+        alerts.forEach(msg => alert("⚠️ Alert: " + msg));
+    }
+
+    new Chart(ctx, 
+    {
+      type: 'line',
+      data: 
+      {
+        labels: labels.reverse(),
+        datasets: 
+        [
+          {
+            label: '🌡️ Temperature (°C)',
+            data: temperature.reverse(),
+            borderColor: 'red',
+            backgroundColor: 'rgba(255, 0, 0, 0.2)',
+            fill: true,
+            tension: 0.4
+          },
+          {
+            label: '💧 Humidity (%)',
+            data: humidity.reverse(),
+            borderColor: 'blue',
+            backgroundColor: 'rgba(0, 0, 255, 0.2)',
+            fill: true,
+            tension: 0.4
+          },
+          {
+            label: '🌱 Soil Moisture',
+            data: soil.reverse(),
+            borderColor: 'green',
+            backgroundColor: 'rgba(0, 128, 0, 0.2)',
+            fill: true,
+            tension: 0.4
+          }
+        ]
+      },
+      options: 
+      {
+        responsive: true,
+        plugins: 
+        {
+          legend: 
+          {
+            labels: 
+            {
+              font: 
+              {
+                size: 14
+              }
+            }
+          }
+        },
+        scales: 
+        {
+           y: 
+           {
+             beginAtZero: false, 
+             suggestedMin: 0,    
+             suggestedMax: 100   
+            }
+         }
+      }
+    } );
+  }
+  fetchData();
+</script> 
+
+ <footer style="text-align:center; padding:10px; margin-top: 30px; color:#555;">
+   Made with ❤️ by Abimanyu | Smart Farm Monitoring System
+ </footer>
+  
+</body>
+
+</html>
